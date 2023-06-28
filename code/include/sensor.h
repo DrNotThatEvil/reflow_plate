@@ -1,5 +1,5 @@
-#ifndef PLATE_SENSOR_H
-#define PLATE_SENSOR_H
+#ifndef SENSOR_H
+#define SENSOR_H
 
 #include <stdint.h>
 
