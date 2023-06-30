@@ -15,4 +15,6 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-maybe-uninitialized)
 endif()
 
+set_property(GLOBAL PROPERTY CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 add_subdirectory(src)

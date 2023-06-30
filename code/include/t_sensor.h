@@ -1,7 +1,7 @@
-#ifndef SENSOR_H
-#define SENSOR_H
+#ifndef T_SENSOR_H
+#define T_SENSOR_H
 
-#include <stdint.h>
+#include <cstdint>
 
 // Temprature state
 //   Tracking the state of the sensors.
@@ -17,30 +17,40 @@
 //  Abnormal deviations
 //  A to big delta between sensor 1 & 2
 
+#define T_VCC 3.3
+#define T_SENSOR_R 100000 // 100K
+#define T_PULLDO_R 100000 // 100K
 
-#define P_SENSOR_MAX_OUTLIER_COUNT 5
-#define P_SENSOR_OUTLIER_COUNT_RST 10
+#define T_SENSOR_MAX_OUTLIER_COUNT 5
+#define T_SENSOR_OUTLIER_COUNT_RST 10
 
 // 0 -- 1 -- 2 -- 3 -- 4 -- 5 -- 6 -- 7 --  8 -- 9 
 
-uint8_t p_temp_sensor_initialized = 0;
+uint8_t t_sensor_initialized = 0;
 
 typedef struct {
     uint16_t* sensor_one_readings;
+    float sensor_one_abc[3];
     //uint16_t* temp_sensor_one_deviations;
 
     uint16_t* sensor_two_readings;
+    float sensor_two_abc[3];
     //uint16_t* temp_sensor_two_deviations;
 
     uint8_t sensor_one_outlier_cnt;
     uint8_t sensor_two_outlier_cnt;
 
-    uint16_t cur_reading_index;
-    uint16_t max_reading_history;
-} temp_sensor_state;
+    uint8_t cur_reading_index;
+    uint8_t max_reading_history;
+} t_sensor_state;
 
-int p_sensor_init(temp_sensor_state* sensor_state_ptr, uint16_t max_history);
+void t_sensor_init(
+    t_sensor_state* state_ptr,
+    float a1, float b1, float c1,
+    float a2, float b2, float c2,
+    uint8_t max_history
+);
 
-
+void t_sensor_tick(t_sensor_state* state_ptr);
 
 #endif
