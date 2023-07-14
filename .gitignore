@@ -5,3 +5,6 @@ reflow_plate_fw/.vscode/launch.json
 reflow_plate_fw/.vscode/ipch
 
 code/build
+code/.cache
+code/.vscode/*
+!code/.vscode/c_cpp_properties.json

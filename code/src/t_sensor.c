@@ -1,4 +1,5 @@
 #include "t_sensor.h"
+#include <stdlib.h>
 
 void t_sensor_init(
     t_sensor_state* state_ptr, 
@@ -12,7 +13,6 @@ void t_sensor_init(
     state_ptr->sensor_two_outlier_cnt = 0;
 
     state_ptr->max_reading_history = max_history;
-
     state_ptr->sensor_one_readings = malloc(sizeof(uint16_t) * max_history);
     state_ptr->sensor_two_readings = malloc(sizeof(uint16_t) * max_history);
 }

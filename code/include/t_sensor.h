@@ -1,7 +1,7 @@
 #ifndef T_SENSOR_H
 #define T_SENSOR_H
 
-#include <cstdint>
+#include <stdint.h>
 
 // Temprature state
 //   Tracking the state of the sensors.
@@ -17,9 +17,9 @@
 //  Abnormal deviations
 //  A to big delta between sensor 1 & 2
 
-#define T_VCC 3.3
+#define T_VCC 5
 #define T_SENSOR_R 100000 // 100K
-#define T_PULLDO_R 100000 // 100K
+#define T_SERIES_R 100000 // 100K
 
 #define T_SENSOR_MAX_OUTLIER_COUNT 5
 #define T_SENSOR_OUTLIER_COUNT_RST 10

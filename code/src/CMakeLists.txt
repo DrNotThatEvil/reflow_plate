@@ -4,6 +4,7 @@ SET(REFLOW_PLATE_HEADER_LIST
 
 add_executable(reflow_plate
     main.c
+    t_sensor.c
     ${REFLOW_PLATE_HEADER_LIST}
 )
 

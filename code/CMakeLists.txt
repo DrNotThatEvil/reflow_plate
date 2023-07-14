@@ -4,7 +4,7 @@ include(cmake/pico_sdk_import.cmake)
 
 project(reflow_plate_firmware C CXX ASM)
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 pico_sdk_init()
 
@@ -14,7 +14,7 @@ add_compile_options(-Wall
         )
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-    add_compile_options(-Wno-maybe-uninitialized)
+    add_compile_options(-Wno-maybe-uninitialized -Wimplicit-function-declaration)
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
