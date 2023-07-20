@@ -68,7 +68,7 @@ void t_sensor_init(
 );
 
 int t_sensor_sanitycheck(t_sensor_state* state_ptr, float s0_temp, float s1_temp);
-float t_sensor_read(t_sensor_state* state_ptr, int sensor);
+float t_sensor_read_raw(t_sensor_state* state_ptr, int sensor);
 
 void t_sensor_tick(t_sensor_state* state_ptr);
 
