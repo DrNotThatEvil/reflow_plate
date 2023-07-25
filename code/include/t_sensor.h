@@ -41,15 +41,17 @@ struct t_sensor_state;
 
 typedef void (*t_sensor_error_cb)(struct t_sensor_state* state_ptr);
 
-typedef enum t_sanity_state {
+typedef enum t_reading_state {
+    PREPARING,
     NORMAL,
     HAS_OUTLIERS,
     ERRORED
-} t_sanity_state;
+} t_reading_state;
 
-typedef struct t_sensor_state {
-    uint16_t* s0_readings;
-    uint16_t* s1_readings;
+typedef struct {
+    uint16_t* s_readings_0;
+    uint16_t* s_readings_1;
+    uint16_t** cur_reading_list;
 
     uint8_t s_outlier_cnt;
     uint8_t s_outlier_rst_cnt;
@@ -57,7 +59,7 @@ typedef struct t_sensor_state {
     uint8_t cur_reading_index;
     uint8_t max_reading_history;
 
-    t_sanity_state sanity_state;
+    t_reading_state reading_state;
     t_sensor_error_cb error_cb;
 } t_sensor_state;
 
@@ -71,5 +73,6 @@ int t_sensor_sanitycheck(t_sensor_state* state_ptr, float s0_temp, float s1_temp
 float t_sensor_read_raw(t_sensor_state* state_ptr, int sensor);
 
 void t_sensor_tick(t_sensor_state* state_ptr);
+
 
 #endif
