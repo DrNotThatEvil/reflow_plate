@@ -12,16 +12,17 @@ void t_sensor_init(
     state_ptr->s_outlier_rst_cnt = 0;
 
     state_ptr->max_reading_history = max_history;
-    state_ptr->s0_readings = malloc(sizeof(uint16_t) * max_history);
-    state_ptr->s1_readings = malloc(sizeof(uint16_t) * max_history);
+    state_ptr->s_readings_0 = malloc(sizeof(uint16_t) * max_history);
+    state_ptr->s_readings_1 = malloc(sizeof(uint16_t) * max_history);
+    state_ptr->cur_reading_list = &state_ptr->s_readings_0;
 
-    state_ptr->sanity_state = NORMAL;
+    state_ptr->reading_state = PREPARING;
     state_ptr->error_cb = error_cb;
 
     for(u_int8_t i = 0; i < max_history; i++)
     {
-        state_ptr->s0_readings[i] = 0;
-        state_ptr->s1_readings[i] = 0;
+        state_ptr->s_readings_0[i] = 0;
+        state_ptr->s_readings_1[i] = 0;
     }
 }
 
@@ -32,12 +33,12 @@ int t_sensor_sanitycheck(t_sensor_state *state_ptr, float s0_temp, float s1_temp
     if (s0_temp < T_SENSOR_BAD_MIN || s0_temp > T_SENSOR_BAD_MAX || s1_temp < T_SENSOR_BAD_MIN || s1_temp > T_SENSOR_BAD_MAX)
     {
         state_ptr->s_outlier_cnt++;
-        state_ptr->sanity_state = HAS_OUTLIERS;
+        state_ptr->reading_state = HAS_OUTLIERS;
         state_ptr->s_outlier_rst_cnt = 0; // bad readings reset the good recovery counter
 
         if(state_ptr->s_outlier_cnt > T_SENSOR_MAX_OUTLIER_COUNT) {
             // Call safety routine.
-            state_ptr->sanity_state = ERRORED;
+            state_ptr->reading_state = ERRORED;
             state_ptr->error_cb(state_ptr);
         }
 
@@ -47,12 +48,12 @@ int t_sensor_sanitycheck(t_sensor_state *state_ptr, float s0_temp, float s1_temp
     if(sensor_diff > T_SENSOR_BAD_MAX_DIFF)
     {
         state_ptr->s_outlier_cnt++;
-        state_ptr->sanity_state = HAS_OUTLIERS;
+        state_ptr->reading_state = HAS_OUTLIERS;
         state_ptr->s_outlier_rst_cnt = 0; // bad readings reset the good recovery counter
 
         if(state_ptr->s_outlier_cnt > T_SENSOR_MAX_OUTLIER_COUNT) {
             // Call safety routine.
-            state_ptr->sanity_state = ERRORED;
+            state_ptr->reading_state = ERRORED;
             state_ptr->error_cb(state_ptr);
         }
 
@@ -66,9 +67,17 @@ int t_sensor_sanitycheck(t_sensor_state *state_ptr, float s0_temp, float s1_temp
 
         if (state_ptr->s_outlier_rst_cnt > T_SENSOR_OUTLIER_RST_COUNT) {
             // reset counters.
-            state_ptr->sanity_state = NORMAL;
+            state_ptr->reading_state = PREPARING;
             state_ptr->s_outlier_cnt = 0;
             state_ptr->s_outlier_rst_cnt = 0;
+
+            for(u_int8_t i = 0; i < state_ptr->max_reading_history; i++)
+            {
+                state_ptr->s_readings_0[i] = 0;
+                state_ptr->s_readings_1[i] = 0;
+            }
+
+            state_ptr->cur_reading_list = &state_ptr->s_readings_0;
         }
 
         return 1;
@@ -100,6 +109,31 @@ void t_sensor_tick(t_sensor_state *state_ptr)
         return;
     }
 
-    
+    // Add average of the 2 sensors to the current list.
+    (*state_ptr->cur_reading_list)[state_ptr->cur_reading_index] = (s0 + s1) / 2;
+    state_ptr->cur_reading_index = (state_ptr->cur_reading_index + 1) % state_ptr->max_reading_history;
+    if (state_ptr->cur_reading_index == 0)
+    {
+        // (cur_reading_index + 1) % max
+        // once it flips the current list can be flipped.
+        state_ptr->reading_state = NORMAL;
+    }
 
+    // Check if enough readings have been made.
+    if (state_ptr->reading_state != NORMAL)
+    {
+        return;
+    }
+
+    // calculate average sensor temps using the readings array.
+    uint16_t s0_avg;
+    uint16_t s1_avg;
+    for(u_int8_t i = 0; i < state_ptr->max_reading_history; i++)
+    {
+        s0_avg += state_ptr->s0_readings[i];
+        s1_avg += state_ptr->s1_readings[i];
+    }
+
+    s0_avg /= state_ptr->max_reading_history;
+    s1_avg /= state_ptr->max_reading_history;
 }
