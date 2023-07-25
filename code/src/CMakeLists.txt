@@ -9,6 +9,6 @@ add_executable(reflow_plate
 )
 
 target_include_directories(reflow_plate PUBLIC ../include)
-target_link_libraries(reflow_plate pico_stdlib)
+target_link_libraries(reflow_plate pico_stdlib hardware_adc)
 
 pico_add_extra_outputs(reflow_plate)

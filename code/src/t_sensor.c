@@ -1,5 +1,10 @@
 #include "t_sensor.h"
+
+#include <pico/stdlib.h>
+#include <hardware/gpio.h>
+#include <hardware/adc.h>
 #include <stdlib.h>
+#include <math.h>
 
 void t_sensor_init(
     t_sensor_state* state_ptr,
@@ -18,7 +23,7 @@ void t_sensor_init(
     state_ptr->sanity_state = NORMAL;
     state_ptr->error_cb = error_cb;
 
-    for(u_int8_t i = 0; i < max_history; i++)
+    for(uint8_t i = 0; i < max_history; i++)
     {
         state_ptr->s0_readings[i] = 0;
         state_ptr->s1_readings[i] = 0;
@@ -27,7 +32,7 @@ void t_sensor_init(
 
 int t_sensor_sanitycheck(t_sensor_state *state_ptr, float s0_temp, float s1_temp)
 {
-    int sensor_diff = abs(s0_temp - s1_temp);
+    int sensor_diff = abs(((int)s0_temp) - ((int)s1_temp));
 
     if (s0_temp < T_SENSOR_BAD_MIN || s0_temp > T_SENSOR_BAD_MAX || s1_temp < T_SENSOR_BAD_MIN || s1_temp > T_SENSOR_BAD_MAX)
     {
@@ -99,7 +104,5 @@ void t_sensor_tick(t_sensor_state *state_ptr)
         // Check if errored that kind of stuff.
         return;
     }
-
-    
 
 }

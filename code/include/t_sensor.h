@@ -41,13 +41,13 @@ struct t_sensor_state;
 
 typedef void (*t_sensor_error_cb)(struct t_sensor_state* state_ptr);
 
-enum t_sanity_state {
+typedef enum t_sanity_state {
     NORMAL,
     HAS_OUTLIERS,
     ERRORED
-};
+} t_sanity_state;
 
-typedef struct {
+typedef struct t_sensor_state {
     uint16_t* s0_readings;
     uint16_t* s1_readings;
 
@@ -57,7 +57,7 @@ typedef struct {
     uint8_t cur_reading_index;
     uint8_t max_reading_history;
 
-    t_sensor_sanity_state sanity_state;
+    t_sanity_state sanity_state;
     t_sensor_error_cb error_cb;
 } t_sensor_state;
 
