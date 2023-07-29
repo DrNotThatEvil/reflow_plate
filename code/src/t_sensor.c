@@ -16,10 +16,16 @@ void t_sensor_init(
     state_ptr->s_outlier_cnt = 0;
     state_ptr->s_outlier_rst_cnt = 0;
 
+    state_ptr->s_roc_0 = 0.f;
+    state_ptr->s_roc_1 = 0.f;
+    state_ptr->s_cur_roc = &state_ptr->s_roc_0;
+    state_ptr->s_pre_roc = &state_ptr->s_roc_1;
+
     state_ptr->max_reading_history = max_history;
     state_ptr->s_readings_0 = malloc(sizeof(uint16_t) * max_history);
     state_ptr->s_readings_1 = malloc(sizeof(uint16_t) * max_history);
     state_ptr->cur_reading_list = &state_ptr->s_readings_0;
+    state_ptr->pre_reading_list = &state_ptr->s_readings_1;
 
     state_ptr->reading_state = PREPARING;
     state_ptr->error_cb = error_cb;
@@ -96,9 +102,37 @@ float t_sensor_read_raw(t_sensor_state* state_ptr, int sensor)
     adc_select_input(sensor);
 
     float s_read = adc_read();
-    s_read = T_SENSOR0_SERIESR / ((4095 / s_read) - 1);
+    //s_read = T_SENSOR0_SERIESR / ((4095 / s_read) - 1);
+    s_read = (4095.0f - s_read) * T_SENSOR0_SERIESR / s_read;
+    //s_read = T_SENSOR0_SERIESR * s_read;
 
-    return (1.0f / ((log(s_read / T_SENSOR0_NOMR) / T_SENSOR0_BCOEFF) + 1.0f / T_SENSOR0_NOMT)) - 273.15f;
+    float temp = 1.0f / (log(s_read/T_SENSOR0_SERIESR) / T_SENSOR0_BCOEFF + 1.0f / 298.15f) - 273.15f;
+
+/*
+    float steinhart;
+    steinhart = s_read / T_SENSOR0_NOMR;
+    steinhart = log(steinhart);
+    steinhart /= T_SENSOR0_BCOEFF;
+    steinhart += 1.0f / T_SENSOR0_NOMT;
+    steinhart = 1.0f / steinhart;
+    steinhart -= 273.15f;
+
+    return steinhart;
+    */
+    return temp;
+
+    //return (1.0f / ((log(s_read / T_SENSOR0_NOMR) / T_SENSOR0_BCOEFF) + 1.0f / T_SENSOR0_NOMT)) - 273.15f;
+}
+
+float t_sensor_avg_rate_of_change(t_sensor_state *state_ptr)
+{
+    float t_rate_of_change = 0.0f;
+    for(uint8_t i = 0; i < state_ptr->max_reading_history; i++)
+    {
+        t_rate_of_change += (((*state_ptr->cur_reading_list)[i] - (*state_ptr->cur_reading_list)[i - 1]) / 100.0f);
+    }
+
+    return t_rate_of_change / (state_ptr->max_reading_history - 1);
 }
 
 void t_sensor_tick(t_sensor_state *state_ptr)
@@ -122,6 +156,16 @@ void t_sensor_tick(t_sensor_state *state_ptr)
         // (cur_reading_index + 1) % max
         // once it flips the current list can be flipped.
         state_ptr->reading_state = NORMAL;
+        float rateOfChange = t_sensor_avg_rate_of_change(state_ptr);
+
+        uint16_t** tmp = state_ptr->pre_reading_list;
+        state_ptr->pre_reading_list = state_ptr->cur_reading_list;
+        state_ptr->cur_reading_list = tmp;
+
+        float* tmp_f = state_ptr->s_pre_roc;
+        (*state_ptr->s_cur_roc) = rateOfChange;
+        state_ptr->s_pre_roc = state_ptr->s_cur_roc;
+        state_ptr->s_cur_roc = tmp_f;
     }
 
     // Check if enough readings have been made.
@@ -130,15 +174,4 @@ void t_sensor_tick(t_sensor_state *state_ptr)
         return;
     }
 
-    // calculate average sensor temps using the readings array.
-    uint16_t s0_avg;
-    uint16_t s1_avg;
-    for(uint8_t i = 0; i < state_ptr->max_reading_history; i++)
-    {
-        s0_avg += state_ptr->s0_readings[i];
-        s1_avg += state_ptr->s1_readings[i];
-    }
-
-    s0_avg /= state_ptr->max_reading_history;
-    s1_avg /= state_ptr->max_reading_history;
 }

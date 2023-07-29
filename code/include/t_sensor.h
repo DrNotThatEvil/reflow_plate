@@ -30,13 +30,13 @@
 #define T_SENSOR_MAX_OUTLIER_COUNT 5
 #define T_SENSOR_OUTLIER_RST_COUNT 5
 
-#define T_SENSOR_BAD_MIN 10
+#define T_SENSOR_BAD_MIN 0
 #define T_SENSOR_BAD_MAX 200
-#define T_SENSOR_BAD_MAX_DIFF 5
+#define T_SENSOR_BAD_MAX_DIFF 500
 
 // 0 -- 1 -- 2 -- 3 -- 4 -- 5 -- 6 -- 7 --  8 -- 9 
 
-uint8_t t_sensor_initialized = 0;
+// uint8_t t_sensor_initialized = 0;
 struct t_sensor_state;
 
 typedef void (*t_sensor_error_cb)(struct t_sensor_state* state_ptr);
@@ -48,10 +48,16 @@ typedef enum t_reading_state {
     ERRORED
 } t_reading_state;
 
-typedef struct {
+typedef struct t_sensor_state {
     uint16_t* s_readings_0;
     uint16_t* s_readings_1;
     uint16_t** cur_reading_list;
+    uint16_t** pre_reading_list;
+
+    float s_roc_0;
+    float s_roc_1;
+    float* s_cur_roc;
+    float* s_pre_roc;
 
     uint8_t s_outlier_cnt;
     uint8_t s_outlier_rst_cnt;
@@ -71,6 +77,8 @@ void t_sensor_init(
 
 int t_sensor_sanitycheck(t_sensor_state* state_ptr, float s0_temp, float s1_temp);
 float t_sensor_read_raw(t_sensor_state* state_ptr, int sensor);
+float t_sensor_avg_rate_of_change(t_sensor_state* state_ptr);
+
 
 void t_sensor_tick(t_sensor_state* state_ptr);
 
