@@ -8,10 +8,17 @@ add_executable(reflow_plate
     ${REFLOW_PLATE_HEADER_LIST}
 )
 
-pico_enable_stdio_usb(reflow_plate 0)
-pico_enable_stdio_uart(reflow_plate 1)
+target_include_directories(reflow_plate
+    PUBLIC ../include ../u8g2/csrc 
+)
 
-target_include_directories(reflow_plate PUBLIC ../include)
-target_link_libraries(reflow_plate pico_stdlib hardware_adc)
+file(GLOB U8G2_SRC ../u8g2/csrc/*.c)
+add_library(u8g2 ${U8G2_SRC})
+
+target_link_libraries(reflow_plate pico_stdlib hardware_adc hardware_spi u8g2)
+target_link_options(reflow_plate PUBLIC -Xlinker --print-memory-usage)
 
 pico_add_extra_outputs(reflow_plate)
+
+pico_enable_stdio_usb(reflow_plate 0)
+pico_enable_stdio_uart(reflow_plate 1)
